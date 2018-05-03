@@ -35,6 +35,17 @@ def read_msoa_lut():
                 'lad_id': line[7],
                 'lad_name': line[8]
             })
+
+    with open(os.path.join(INPUT_FILES, 'scottish_postcode_lookup', 'Postcode lookup (revised 100113).csv'), 'r', encoding='utf8', errors='replace') as system_file:
+        reader = csv.reader(system_file)
+        next(reader)
+        for line in reader:
+            msoa_id_lut.append({
+                'msoa_id': line[14],
+                'msoa_name': line[15],
+                'lad_id': line[17],
+                'lad_name': line[18]
+            })
     
     return msoa_id_lut
 
