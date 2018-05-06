@@ -25,26 +25,30 @@ def read_msoa_lut():
     """
     msoa_id_lut = []
 
-    with open(os.path.join(INPUT_FILES, 'postcode_lookup', 'pcd_lookup.csv'), 'r', encoding='utf8', errors='replace') as system_file:
+    with open(os.path.join(INPUT_FILES, 'england_postcode_lookup', 'PCD11_OA11_LSOA11_MSOA11_LAD11_EW_LU_aligned_v2.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
         for line in reader:
+
+            if(len(line) < 1): # check for blank lines
+                continue
+
             msoa_id_lut.append({
                 'msoa_id': line[5],
                 'msoa_name': line[6],
-                'lad_id': line[7],
-                'lad_name': line[8]
+                #'lad_id': line[7],
+                #'lad_name': line[8]
             })
 
-    with open(os.path.join(INPUT_FILES, 'scottish_postcode_lookup', 'Postcode lookup (revised 100113).csv'), 'r', encoding='utf8', errors='replace') as system_file:
+    with open(os.path.join(INPUT_FILES, 'scotland_postcode_lookup', 'Postcode lookup (revised 100113).csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
         for line in reader:
             msoa_id_lut.append({
                 'msoa_id': line[14],
                 'msoa_name': line[15],
-                'lad_id': line[17],
-                'lad_name': line[18]
+                #'lad_id': line[16],
+                #'lad_name': line[17]
             })
     
     return msoa_id_lut
@@ -56,7 +60,8 @@ def read_msoa_lut():
 def write_msoa_lut(data):
     """
     """
-    output_fieldnames = ['msoa_id', 'msoa_name', 'lad_id', 'lad_name']
+    #output_fieldnames = ['msoa_id', 'msoa_name', 'lad_id', 'lad_name']
+    output_fieldnames = ['msoa_id', 'msoa_name']
 
     with open(os.path.join(INPUT_FILES, 'msoa_lookup', 'msoa_lookup.csv'), 'w') as csv_file:
         writer = csv.DictWriter(csv_file, output_fieldnames, lineterminator = '\n')

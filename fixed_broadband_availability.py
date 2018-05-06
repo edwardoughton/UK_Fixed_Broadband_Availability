@@ -2,7 +2,6 @@ import os
 from pprint import pprint
 import configparser
 import csv
-import pprint as pprint
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -12,6 +11,7 @@ BASE_YEAR = 2012
 END_YEAR = 2016
 TIMESTEP_INCREMENT = 1
 TIMESTEPS = range(BASE_YEAR, END_YEAR + 1, TIMESTEP_INCREMENT)
+#N = 100000
 
 #####################################
 # setup file locations and data files
@@ -33,6 +33,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2012', 'ofcoma.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -43,6 +44,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2012', 'ofcomb.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -54,6 +56,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2013', 'ofcom-part1-fixed-broadband-postcode-level-data-2013.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -64,6 +67,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2013', 'ofcom-part2-fixed-broadband-postcode-level-data-2013.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -75,6 +79,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2014', 'fixed_postcode_2014.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -86,6 +91,7 @@ def read_pcd_data():
     with open(os.path.join(INPUT_FILES, '2015', 'Fixed_Postcode_updated_01022016.csv'), 'r', encoding='utf8', errors='replace') as system_file:
         reader = csv.reader(system_file)
         next(reader)
+        #reader = [next(reader) for x in range(N)]
         for line in reader:
             pcd_data.append({
                 'postcode': line[0].replace(' ', ''),
@@ -93,11 +99,12 @@ def read_pcd_data():
                 'year': 2015
             })
 
-    ###2016####
+    2016###
     for filename in os.listdir(os.path.join(INPUT_FILES, '2016')):
         with open(os.path.join(INPUT_FILES, '2016', filename), 'r', encoding='utf8', errors='replace') as system_file:
             reader = csv.reader(system_file)
             next(reader)
+            # reader = [next(reader) for x in range(N)]
             for line in reader:
                 pcd_data.append({
                     'postcode': line[0].replace(' ', ''),
@@ -135,15 +142,61 @@ def read_codepoint():
     return codepoint_data
 
 #####################################
-# MERGE POSTCODES AND CODEPOINT
+# READ POSTCODE LUT (ENG & WALES)
 #####################################
 
-# def merge_postcodes_and_codepoint(postcode_data, codepoint_data):
-    
-#     for postcode, postcode_codepoint in zip(postcode_data, codepoint_data):
-#         postcode.update(postcode_codepoint)
-    
-#     return postcode_data
+def read_pcd_lut():
+    """
+    """
+    pcd_lut_data = []
+
+    for year in TIMESTEPS:
+        with open(os.path.join(INPUT_FILES, 'postcode_lookup', 'PCD11_OA11_LSOA11_MSOA11_LAD11_EW_LU_aligned_v2.csv'), 'r', encoding='utf8', errors='replace') as system_file:
+            reader = csv.reader(system_file)
+            next(reader)
+            for line in reader:
+
+                if(len(line) < 1): # check for blank lines
+                    continue
+
+                pcd_lut_data.append({
+                    'postcode': line[0].replace(' ', ''),
+                    'msoa_id': line[5],
+                    'msoa_name': line[6],
+                    'year': year
+                })
+
+        with open(os.path.join(INPUT_FILES, 'scotland_postcode_lookup', 'Postcode lookup (revised 100113).csv'), 'r', encoding='utf8', errors='replace') as system_file:
+            reader = csv.reader(system_file)
+            next(reader)
+            for line in reader:
+                pcd_lut_data.append({
+                    'postcode': line[0].replace(' ', ''),
+                    'msoa_id': line[14],
+                    'msoa_name': line[15],
+                    'year': year
+                })
+
+    return pcd_lut_data
+
+#####################################
+# READ MSOA LUT (ENG & WALES)
+#####################################
+
+def read_msoa_lut():
+    """
+    """
+    msoa_lut_data = []
+
+    with open(os.path.join(INPUT_FILES, 'msoa_lookup', 'msoa_lookup.csv'), 'r', encoding='utf8', errors='replace') as system_file:
+        reader = csv.reader(system_file)
+        next(reader)
+        for line in reader:
+            msoa_lut_data.append(line[0])
+   
+    msoa_lut_data.append('misc_msoa_key')
+
+    return msoa_lut_data
 
 #####################################
 # MERGE POSTCODES AND CODEPOINT
@@ -158,38 +211,6 @@ def merge_two_lists_of_dicts(list_of_dicts_1, list_of_dicts_2, parameter1, param
     list_of_dicts_1 = [dict(d, **d1.get((d[parameter1], d[parameter2]), {})) for d in list_of_dicts_1]	
 
     return list_of_dicts_1
-
-#####################################
-# PROCESS OFCOM AVAILABILITY INDICATORS
-#####################################
-
-def process_availability_indicators(data):
-
-    for row in data:
-        if row['year'] == 2012 or row['year'] == 2013:
-            if row['nga_availability'] == 'Y':
-                row['nga_availability'] = 1
-            if row['nga_availability'] == 'N':
-                row['nga_availability'] = 0     
-    
-    for row in data:
-        if row['year'] == 2012 or row['year'] == 2013:
-            try:
-                row['premises_with_nga'] = (row['nga_availability']) * int(row['delivery_points'])
-            except:
-                pass
-
-    for row in data:
-        if not row['year'] == 2012 and not row['year'] == 2013:
-            try:
-                if int(row['nga_availability']) > 0:            
-                    row['premises_with_nga'] = (row['nga_availability']/100) * int(row['delivery_points'])
-                if int(row['nga_availability']) == 0:            
-                    row['premises_with_nga'] = (row['nga_availability']/100) * int(row['delivery_points'])
-            except:
-                pass
-
-    return data
 
 #####################################
 # ADD MISSING NGA_AVAILABILITY INDICATOR    
@@ -216,40 +237,6 @@ def add_missing_delivery_points_keys(data):
     return data
 
 #####################################
-# READ POSTCODE LUT (ENG & WALES)
-#####################################
-
-def read_pcd_lut():
-    """
-    """
-    pcd_lut_data = []
-
-    for year in TIMESTEPS:
-        with open(os.path.join(INPUT_FILES, 'postcode_lookup', 'pcd_lookup.csv'), 'r', encoding='utf8', errors='replace') as system_file:
-            reader = csv.reader(system_file)
-            next(reader)
-            for line in reader:
-                pcd_lut_data.append({
-                    'postcode': line[0].replace(' ', ''),
-                    'msoa_id': line[5],
-                    'msoa_name': line[6],
-                    'year': year
-                })
-
-        with open(os.path.join(INPUT_FILES, 'scottish_postcode_lookup', 'Postcode lookup (revised 100113).csv'), 'r', encoding='utf8', errors='replace') as system_file:
-            reader = csv.reader(system_file)
-            next(reader)
-            for line in reader:
-                pcd_lut_data.append({
-                    'postcode': line[0].replace(' ', ''),
-                    'msoa_id': line[14],
-                    'msoa_name': line[15],
-                    'year': year
-                })
-
-    return pcd_lut_data
-
-#####################################
 # ADD MISC MSOA FOR MISSING KEYS
 #####################################
 
@@ -260,26 +247,40 @@ def add_missing_msoa_keys(data):
             element['msoa_id'] = 'misc_msoa_key'
 
     return data
+#####################################
+# PROCESS OFCOM AVAILABILITY INDICATORS
+#####################################
+
+def process_availability_indicators(data):
+
+    for row in data:
+        if row['year'] == 2012 or row['year'] == 2013:
+            if row['nga_availability'] == 'Y':
+                row['nga_availability'] = 1
+            if row['nga_availability'] == 'N':
+                row['nga_availability'] = 0     
     
-#####################################
-# READ MSOA LUT (ENG & WALES)
-#####################################
+    for row in data:
+        if row['year'] == 2012 or row['year'] == 2013:
+            try:
+                row['premises_with_nga'] = (row['nga_availability']) * int(row['delivery_points'])
+            except:
+                pass
 
-def read_msoa_lut():
-    """
-    """
-    msoa_lut_data = []
+    for row in data:
+        if not row['year'] == 2012 and not row['year'] == 2013:
+            try:
+                if int(row['nga_availability']) > 0:            
+                    row['premises_with_nga'] = (int(row['nga_availability'])/100) * int(row['delivery_points'])
+                if int(row['nga_availability']) == 0:            
+                    row['premises_with_nga'] = (int(row['nga_availability'])/100) * int(row['delivery_points'])                  
+            except:
+                print(row)
+                raise Exception
 
-    with open(os.path.join(INPUT_FILES, 'msoa_lookup', 'msoa_lookup.csv'), 'r', encoding='utf8', errors='replace') as system_file:
-        reader = csv.reader(system_file)
-        next(reader)
-        for line in reader:
-            msoa_lut_data.append(line[0])
-   
-    msoa_lut_data.append('misc_msoa_key')
+    return data
 
-    return msoa_lut_data
-
+    
 #####################################
 # READ LUT (ENG & WALES)
 #####################################
@@ -353,6 +354,10 @@ def csv_writer(data, output_fieldnames, filename):
 
 if __name__ == "__main__":
     
+    ##############
+    # READ
+    ##############
+
     #Read Ofcom data
     print('read_pcd_data')
     pcd_data = read_pcd_data()
@@ -361,14 +366,22 @@ if __name__ == "__main__":
     print('read_codepoint')
     codepoint = read_codepoint()
 
+    # Read LUT
+    print('Read postcode LUT')
+    my_pcd_lut = read_pcd_lut()
+
+    # Read LUT
+    print('Read msoa LUT')
+    my_msoa_lut = read_msoa_lut()
+
+    ##############
+    # MERGE AND PROCESS
+    ##############
+
     # Merge postcodes and codepoint
     print('Merging postcodes and codepoint postcodes')
     #pcd_data = merge_postcodes_and_codepoint(pcd_data, codepoint)
     pcd_data = merge_two_lists_of_dicts(pcd_data, codepoint, 'postcode', 'year')
-
-    # Process availability indicators
-    print('Processing availability indicators') 
-    pcd_data = process_availability_indicators(pcd_data)
 
     # Process availability indicators
     print('Adding any missing nga availability keys') 
@@ -378,10 +391,10 @@ if __name__ == "__main__":
     print('Adding any missing delivery points keys') 
     pcd_data = add_missing_delivery_points_keys(pcd_data)
 
-    # Read LUT
-    print('Read postcode LUT')
-    my_pcd_lut = read_pcd_lut()
-    
+    # Process availability indicators
+    print('Processing availability indicators') 
+    pcd_data = process_availability_indicators(pcd_data)
+
     # Merge postcodes and msoa lut 
     print('Merging postcodes and msoa lut')
     pcd_data = merge_two_lists_of_dicts(pcd_data, my_pcd_lut, 'postcode', 'year')
@@ -390,20 +403,20 @@ if __name__ == "__main__":
     print('Adding any missing msoa keys')
     pcd_data = add_missing_msoa_keys(pcd_data)
 
-    # Read LUT
-    print('Read msoa LUT')
-    my_msoa_lut = read_msoa_lut()
+    ##############
+    # CALC COVERAGE
+    ##############
 
     # Calculate coverage
     print('Calculating msoa coverage')
     msoa_coverage = calculate_msoa_coverage(pcd_data, TIMESTEPS, my_msoa_lut) 
 
-    # Write LUTs
-    #print('write postcode data')
-    #postcode_output_fieldnames = ['postcode', 'nga_availability','year', 'delivery_points', 'type', 'premises_with_nga', 'msoa_id', 'msoa_name']
-    #csv_writer(pcd_data, postcode_output_fieldnames)
+    # #Write LUTs
+    # #print('write postcode data')
+    # #postcode_output_fieldnames = ['postcode', 'nga_availability','year', 'delivery_points', 'type', 'premises_with_nga', 'msoa_id', 'msoa_name']
+    # #csv_writer(pcd_data, postcode_output_fieldnames, 'test.csv')
 
-    # Write LUTs
+    # # Write LUTs
     print('write msoa data')
     msoa_output_fieldnames = ['year', 'msoa', 'percentage_coverage', 'prems_covered', 'delivery_points']
     csv_writer(msoa_coverage, msoa_output_fieldnames, 'nga_availability.csv')
